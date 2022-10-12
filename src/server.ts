@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import { Router, Request, Response } from 'express';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
 (async () => {
@@ -29,6 +30,22 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   /**************************************************************************** */
 
+  app.get( "/filteredimage", async (req: Request, res: Response) => {
+    let {image_url} = req.query;
+    if (!image_url){
+      res.status(400).send('Error : Empty image url submitted');
+    } else {
+      await filterImageFromURL(image_url).then( function (img_filtered_path){
+        res.sendFile(img_filtered_path, () => {       
+          deleteLocalFiles([img_filtered_path]);       
+        });   
+      }).catch(function(err){
+        res.status(400).send('The image can not be filtered - check the link submitted ');
+      });  
+
+    }
+  });
+
   //! END @TODO1
   
   // Root Endpoint
@@ -36,7 +53,6 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.get( "/", async ( req, res ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
-  
 
   // Start the Server
   app.listen( port, () => {
